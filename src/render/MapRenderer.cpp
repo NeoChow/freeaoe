@@ -21,9 +21,6 @@
 #include "core/Constants.h"
 #include <resource/AssetManager.h>
 #include <resource/DataManager.h>
-#include <SFML/Graphics/Sprite.hpp>
-#include <SFML/Graphics/CircleShape.hpp>
-#include <SFML/Graphics/Text.hpp>
 
 MapRenderer::MapRenderer() :
     m_camChanged(true),
@@ -33,7 +30,6 @@ MapRenderer::MapRenderer() :
     m_rRowEnd(0),
     m_rColBegin(0),
     m_rColEnd(0),
-    m_textureTarget(m_mapRenderTexture),
     m_elevationHeight(DataManager::Inst().terrainBlock().ElevHeight)
 {
 }
@@ -51,7 +47,7 @@ bool MapRenderer::update(Time /*time*/)
     const MapPos cameraPos = renderTarget_->camera()->targetPosition();
 
     if (!m_camChanged && m_lastCameraPos == cameraPos &&
-        Size(m_mapRenderTexture.getSize()) == renderTarget_->getSize() &&
+        (m_textureTarget && m_textureTarget->getSize() == renderTarget_->getSize()) &&
         !m_map->tilesUpdated()) {
         return false;
     }
@@ -118,11 +114,11 @@ bool MapRenderer::update(Time /*time*/)
 
 void MapRenderer::display()
 {
-    if (Size(m_mapRenderTexture.getSize()) != renderTarget_->getSize()) {
+    if (!m_textureTarget || m_textureTarget->getSize() != renderTarget_->getSize()) {
         updateTexture();
     }
 
-    renderTarget_->draw(m_mapRenderTexture.getTexture(), ScreenPos(0, 0));
+    renderTarget_->draw(m_textureTarget);
 }
 
 void MapRenderer::setMap(const MapPtr &map)
@@ -138,21 +134,23 @@ void MapRenderer::setMap(const MapPtr &map)
 
 void MapRenderer::updateTexture()
 {
-    if (m_mapRenderTexture.getSize().x != renderTarget_->getSize().width || m_mapRenderTexture.getSize().y != renderTarget_->getSize().height) {
-        m_mapRenderTexture.create(renderTarget_->getSize().width, renderTarget_->getSize().height);
+    if (!m_textureTarget || m_textureTarget->getSize() == renderTarget_->getSize()) {
+        m_textureTarget = renderTarget_->createTextureTarget(renderTarget_->getSize());
     }
 
-    m_mapRenderTexture.clear();
+    m_textureTarget->clear();
 
-    if (!m_mapRenderTexture.getSize().x || !m_mapRenderTexture.getSize().y) {
-        return;
-    }
-
-    sf::CircleShape invalidIndicator(Constants::TILE_SIZE, 4);
-    invalidIndicator.setScale(1, 0.5);
-    invalidIndicator.setFillColor(sf::Color::Red);
-    invalidIndicator.setOutlineThickness(3);
-    invalidIndicator.setOutlineColor(sf::Color::Transparent);
+    Drawable::Circle invalidIndicator;
+    invalidIndicator.radius = Constants::TILE_SIZE;
+    invalidIndicator.pointCount = 4;
+    invalidIndicator.aspectRatio = 0.5;
+    invalidIndicator.filled = true;
+    invalidIndicator.fillColor = Drawable::Red;
+//    sf::CircleShape invalidIndicator(Constants::TILE_SIZE, 4);
+//    invalidIndicator.setScale(1, 0.5);
+//    invalidIndicator.setFillColor(sf::Color::Red);
+//    invalidIndicator.setOutlineThickness(3);
+//    invalidIndicator.setOutlineColor(sf::Color::Transparent);
 
 //    sf::Text text;
 //    text.setFont(SfmlRenderTarget::defaultFont());
@@ -188,17 +186,15 @@ void MapRenderer::updateTexture()
             TerrainPtr terrain = AssetManager::Inst()->getTerrain(mapTile.terrainId);
 
             if (!terrain) {
-                invalidIndicator.setPosition(spos);
-                m_textureTarget.draw(invalidIndicator);
+                invalidIndicator.center = spos + ScreenPos(Constants::TILE_SIZE_HORIZONTAL/2, Constants::TILE_SIZE_VERTICAL/2);
+                m_textureTarget->draw(invalidIndicator);
                 continue;
             }
 
-            m_textureTarget.draw(terrain->texture(mapTile), spos);
+            m_textureTarget->draw(terrain->texture(mapTile), spos);
 //            text.setString(std::to_string(col) + "," + std::to_string(row));
 //            text.setPosition(spos.x, spos.y);
 //            m_textureTarget.draw(text);
         }
     }
-
-    m_mapRenderTexture.display();
 }

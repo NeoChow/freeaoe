@@ -20,7 +20,7 @@
 
 #include "IRenderer.h"
 #include "mechanics/Map.h"
-#include "render/SfmlRenderTarget.h"
+#include "render/IRenderTarget.h"
 
 class MapRenderer : public IRenderer
 {
@@ -52,10 +52,7 @@ private:
     int m_rRowBegin, m_rRowEnd;
     int m_rColBegin, m_rColEnd;
 
-    sf::RenderTexture m_mapRenderTexture;
-    SfmlRenderTarget m_textureTarget;
-
-    sf::Image m_mapImage;
+    IRenderTargetPtr m_textureTarget;
 
     const int m_elevationHeight;
 };
