@@ -24,6 +24,7 @@
 #include <SFML/Graphics.hpp>
 
 #include <SFML/Graphics/RenderWindow.hpp>
+#include "render/SfmlRenderTarget.h"
 #include "resource/AssetManager.h"
 #include "resource/Resource.h"
 #include "render/GraphicRender.h"

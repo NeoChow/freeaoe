@@ -1,6 +1,8 @@
 #pragma once
 
 #include "core/Types.h"
+#include <SFML/Graphics/Text.hpp>
+#include <SFML/Graphics/RectangleShape.hpp>
 
 #include <memory>
 #include <filesystem>

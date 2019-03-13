@@ -143,6 +143,7 @@ void GraphicRender::render(sf::RenderTarget &renderTarget, const ScreenPos scree
         case RenderType::Outline:
             sprite.setTexture(m_graphic->texture(m_currentFrame, m_angle, m_playerId, ImageType::Outline));
             blendMode = sf::BlendAlpha;
+            blendMode.colorDstFactor = sf::BlendMode::SrcColor;
             blendMode.alphaSrcFactor = sf::BlendMode::DstAlpha;
             break;
         case RenderType::ConstructAvailable:
