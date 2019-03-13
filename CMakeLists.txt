@@ -4,6 +4,8 @@ set (CMAKE_CXX_STANDARD 17)
 
 project(freeaoe)
 
+find_package(SDL2 REQUIRED)
+
 if (CMAKE_BUILD_TYPE MATCHES Debug)
     add_definitions(-DDEBUG)
 
@@ -182,6 +184,8 @@ target_link_libraries(freeaoe
     sfml-graphics
     ${EXTRA_LIBS}
     genieutils
+    SDL2::SDL2
+    SDL2::SDL2main
 )
 
 install(TARGETS freeaoe DESTINATION bin)

@@ -29,6 +29,13 @@ class RenderTarget;
 class Font;
 }
 
+struct SfmlImage : public Drawable::Image
+{
+    SfmlImage() {}
+
+    sf::Texture texture;
+};
+
 class SfmlRenderTarget : public IRenderTarget
 {
 
@@ -53,12 +60,17 @@ public:
 
     void draw(const ScreenRect &rect, const sf::Color &fillColor, const sf::Color &outlineColor = sf::Color::Transparent, const float outlineSize = 1.) override;
 
+    void draw(const Drawable::Rect &rect) override;
+    void draw(const Drawable::Circle &circle) override;
+
+    Drawable::Image::Ptr createImage(const Size &size, const uint8_t *bytes) override;
+    void draw(const Drawable::Image::Ptr &image) override;
+
     //----------------------------------------------------------------------------
     /// Displays frame.
     //
     void display() override;
 
     sf::RenderTarget *renderTarget_;
-private:
 };
 

@@ -41,14 +41,14 @@ class UnitInfoPanel;
 class Minimap;
 
 enum class GameType {
-    Default,
-    HighResource,
-    MediumResource,
-    KingOfTheHill,
-    Deathmatch,
-    SuddenDeath,
-    Regicide,
-    WonderRace
+    Default = 0,
+    HighResource = 1,
+    MediumResource = 2,
+    KingOfTheHill = 3,
+    Deathmatch = 4,
+    SuddenDeath = 5,
+    Regicide = 6,
+    WonderRace = 7
 };
 
 namespace sf {

@@ -198,8 +198,9 @@ const sf::Texture &Terrain::texture(const MapTile &tile)
     const genie::FiltermapFile &filterFile = AssetManager::Inst()->filtermapFile();
     const genie::FiltermapFile::Filtermap &filter = filterFile.maps[tile.slopes.self.toGenie()];
 
-    sf::Image image;
-    image.create(m_slp->frameWidth(tile.frame), filter.height, sf::Color::Transparent);
+    const Size frameSize(m_slp->frameWidth(tile.frame), filter.height);
+    std::vector<Uint8> pixelsBuf(frameSize.width * frameSize.height * 4);
+    uint8_t *pixels = pixelsBuf.data();
 
     const uint32_t baseOffset = m_slp->frameCommandsOffset(tile.frame, 0);
     const uint8_t *rawData = data.data() + baseOffset;
@@ -229,26 +230,37 @@ const sf::Texture &Terrain::texture(const MapTile &tile)
 
             // And then finally we get the color for a single pixel
             const genie::Color &newColor = colors[pixelIndex];
-            image.setPixel(xPos, y, sf::Color(newColor.r, newColor.g, newColor.b));
+
+            const size_t pixelPos = (y * frameSize.width + xPos) * 4;
+            pixels[pixelPos    ] = newColor.r;
+            pixels[pixelPos + 1] = newColor.g;
+            pixels[pixelPos + 2] = newColor.b;
+            pixels[pixelPos + 3] = 255;
         }
     }
 
 #ifdef DEBUG
-    addOutline(image);
+    addOutline(frameSize, pixels);
 #endif
 
+    sf::Image image;
+    image.create(frameSize.width, frameSize.height, pixels);
     m_textures[tile].loadFromImage(image);
 
     return m_textures[tile];
 }
 
-void Terrain::addOutline(sf::Image &img)
+void Terrain::addOutline(const Size &size, uint8_t *pixels)
 {
-    for (size_t x=2;x<img.getSize().x; x++) {
-        for (size_t y=0;y<img.getSize().y; y++) {
-            if (img.getPixel(x-1, y).a == 255 && (img.getPixel(x-2, y).a == 0 || (y == 0 && x%2))) {
-                img.setPixel(x, y, sf::Color::White);
-                continue;
+    for (size_t x=2;x<size.width; x++) {
+        for (size_t y=0;y<size.height; y++) {
+            const size_t pixelPos = (y * size.width + x) * 4;
+
+            const size_t leftPixelPos = (y * size.width + x - 2) * 4 + 3; // +3 == alpha
+            if (pixels[pixelPos + 3] == 255 && (pixels[leftPixelPos] == 0 || (y == 0 && x % 2))) {
+                pixels[pixelPos    ] = 255;
+                pixels[pixelPos + 1] = 255;
+                pixels[pixelPos + 2] = 255;
             }
         }
     }
