@@ -18,12 +18,25 @@
 
 #pragma once
 
-#include "mechanics/Entity.h"
-#include "resource/Graphic.h"
+//#include "mechanics/Entity.h"
+//#include "resource/Graphic.h"
 #include "render/Camera.h"
 
-#include <SFML/Graphics/Texture.hpp>
-#include <SFML/Graphics/Shape.hpp>
+//#include <SFML/Graphics/Texture.hpp>
+//#include <SFML/Graphics/Shape.hpp>
+
+namespace sf {
+class Image;
+class Texture;
+class Drawable;
+class Color;
+}
+
+namespace genie{
+class SlpFrame;
+class PalFile;
+typedef std::shared_ptr<SlpFrame> SlpFramePtr;
+}
 
 namespace Drawable {
 struct Color {
@@ -37,6 +50,9 @@ struct Color {
 static const Color Red(255, 0, 0);
 static const Color Green(0, 255, 0);
 static const Color Blue(0, 0, 255);
+static const Color Transparent(0, 0, 0, 0);
+static const Color White(255, 255, 255);
+static const Color Black;
 
 struct Shape
 {
@@ -67,7 +83,7 @@ struct Image
 {
     typedef std::shared_ptr<Image> Ptr;
 
-    ScreenRect rect;
+    Size size;
 
 protected:
     Image() {}
@@ -114,7 +130,8 @@ public:
     /// TODO: Remove sf:: from api
     virtual void draw(const sf::Drawable &shape) = 0;
 
-    virtual void draw(const ScreenRect &rect, const sf::Color &fillColor, const sf::Color &outlineColor = sf::Color::Transparent, const float outlineSize = 1.) = 0;
+//    virtual void draw(const ScreenRect &rect, const sf::Color &fillColor, const sf::Color &outlineColor = sf::Color::Transparent, const float outlineSize = 1.) = 0;
+    virtual void draw(const ScreenRect &rect, const Drawable::Color &fillColor, const Drawable::Color &outlineColor = Drawable::Transparent, const float outlineSize = 1.) = 0;
 
     //----------------------------------------------------------------------------
     /// Displays frame.
@@ -129,7 +146,7 @@ public:
 
     virtual Drawable::Image::Ptr createImage(const Size &size, const uint8_t *pixels) = 0;
     virtual Drawable::Image::Ptr convertFrameToImage(const genie::SlpFramePtr &frame, const genie::PalFile &palette, const int playerId = -1);
-    virtual void draw(const Drawable::Image::Ptr &image) = 0;
+    virtual void draw(const Drawable::Image::Ptr &image, const ScreenPos &position) = 0;
 
     virtual std::shared_ptr<IRenderTarget> createTextureTarget(const Size &size) = 0;
 

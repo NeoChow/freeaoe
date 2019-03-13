@@ -96,11 +96,11 @@ uint32_t Terrain::coordinatesToFrame(int x, int y)
     return (y % tileSquareCount) + (x % tileSquareCount) * tileSquareCount;
 }
 
-const sf::Texture &Terrain::texture(const MapTile &tile)
+const Drawable::Image::Ptr &Terrain::texture(const MapTile &tile, const IRenderTargetPtr &renderer)
 {
     // The original graphics code in aoe was apparently hand-written assembly according to people on the internet,
     // and since I'm too lazy and too dumb to optimize this properly we just cache heavily instead
-    std::unordered_map<MapTile, sf::Texture>::const_iterator it = m_textures.find(tile);
+    std::unordered_map<MapTile, Drawable::Image::Ptr>::const_iterator it = m_textures.find(tile);
     if (it != m_textures.end()) {
         return it->second;
     }
@@ -243,9 +243,7 @@ const sf::Texture &Terrain::texture(const MapTile &tile)
     addOutline(frameSize, pixels);
 #endif
 
-    sf::Image image;
-    image.create(frameSize.width, frameSize.height, pixels);
-    m_textures[tile].loadFromImage(image);
+    m_textures[tile] = renderer->createImage(frameSize, pixels);
 
     return m_textures[tile];
 }

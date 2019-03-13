@@ -18,11 +18,11 @@
 
 #pragma once
 
+#include "render/IRenderTarget.h"
 #include "Resource.h"
 #include "mechanics/MapTile.h"
 #include "core/Logger.h"
 
-#include <SFML/Graphics/Texture.hpp>
 #include <genie/dat/Terrain.h>
 
 #include <genie/resource/SlpFile.h>
@@ -49,13 +49,10 @@ public:
     const genie::Terrain &data();
 
     static uint8_t blendMode(const uint8_t ownMode, const uint8_t neighborMode);
-    const sf::Texture &blendImage(const Blend blends, int tileX, int tileY);
-
-    const sf::Texture &slopedImage(const TileSlopes &slopes, const std::vector<genie::Pattern> &patterns, int tileX, int tileY);
 
     uint32_t coordinatesToFrame(int x, int y);
 
-    const sf::Texture &texture(const MapTile &tile);
+    const Drawable::Image::Ptr &texture(const MapTile &tile, const IRenderTargetPtr &renderer);
 
 private:
     void addOutline(const Size &size, uint8_t *pixels);
@@ -63,11 +60,7 @@ private:
     genie::Terrain m_data;
     genie::SlpFilePtr m_slp;
 
-    std::unordered_map<int, sf::Texture> m_images; // TODO Frames?
-    std::unordered_map<Blend, sf::Texture> m_blendImages;
-    std::unordered_map<TileSlopes, sf::Texture> m_slopeImages;
-
-    std::unordered_map<MapTile, sf::Texture> m_textures;
+    std::unordered_map<MapTile, Drawable::Image::Ptr> m_textures;
 
     bool m_isLoaded = false;
 };

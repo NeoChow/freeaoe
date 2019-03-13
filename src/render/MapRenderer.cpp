@@ -191,7 +191,7 @@ void MapRenderer::updateTexture()
                 continue;
             }
 
-            m_textureTarget->draw(terrain->texture(mapTile), spos);
+            m_textureTarget->draw(terrain->texture(mapTile, renderTarget_), spos);
 //            text.setString(std::to_string(col) + "," + std::to_string(row));
 //            text.setPosition(spos.x, spos.y);
 //            m_textureTarget.draw(text);
