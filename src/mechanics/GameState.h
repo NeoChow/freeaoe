@@ -23,12 +23,10 @@
 #include "core/Logger.h"
 
 #include "Map.h"
-#include "render/SfmlRenderTarget.h"
+#include "render/IRenderTarget.h"
+#include <SFML/Window/Event.hpp>
 #include "render/MapRenderer.h"
 #include "UnitManager.h"
-#include <SFML/Graphics/RectangleShape.hpp>
-#include <SFML/Graphics/Sprite.hpp>
-#include <SFML/Graphics/Text.hpp>
 
 #include "Civilization.h"
 
@@ -59,13 +57,7 @@ struct Label {
     Label(const int right, const int top) :
         m_right(right),
         m_top(top)
-    {
-        text.setFont(SfmlRenderTarget::defaultFont());
-        text.setOutlineColor(sf::Color::Black);
-        text.setOutlineThickness(1);
-        text.setFillColor(sf::Color::White);
-        text.setCharacterSize(16);
-    }
+    { }
 
     void setValue(const int value) {
         if (value == m_value) {
@@ -83,21 +75,33 @@ struct Label {
         updateText();
     }
 
-    sf::Text text;
-
-private:
-    void updatePosition() {
-        text.setPosition(sf::Vector2f(m_right - text.getLocalBounds().width, m_top));
+    void draw(const IRenderTargetPtr &target) {
+        if (!text) {
+            text = target->createText();
+            updateText();
+        }
+        target->draw(text);
     }
 
+private:
     void updateText() {
+        if (!text) {
+            return;
+        }
+
         std::string string = std::to_string(m_value);
         if (m_maxValue) {
             string += '/';
             string += std::to_string(m_maxValue);
         }
-        text.setString(string);
-        updatePosition();
+        text->string = string;
+
+        text->color = Drawable::White;
+        text->outlineColor = Drawable::Black;
+        text->pointSize = 16;
+        text->alignment = Drawable::Text::AlignRight;
+        text->position = ScreenPos(m_right, m_top);
+//        text.setString(string);
     }
 
     int m_maxValue = 0;
@@ -105,6 +109,7 @@ private:
 
     const int m_right = 0;
     const int m_top = 0;
+    Drawable::Text::Ptr text;
 };
 
 struct Cursor {
@@ -130,20 +135,26 @@ struct Cursor {
         Flag
     };
 
-    void setCursor(const Type type) {
-        if (type == currentType) {
+    Type currentType = Normal;
+
+    void draw(const IRenderTargetPtr &renderTarget) {
+        if (!cursorsFile) {
             return;
         }
-        texture.loadFromImage(Resource::convertFrameToImage(cursorsFile->getFrame(type)));
-        sprite.setTexture(texture, true);
-        currentType = type;
+
+        if (!image || loadedType != currentType) {
+            image = renderTarget->convertFrameToImage(cursorsFile->getFrame(currentType));
+            loadedType = currentType;
+        }
+        renderTarget->draw(image, position);
     }
 
-    sf::Texture texture;
-    sf::Sprite sprite;
+    ScreenPos position;
     genie::SlpFilePtr cursorsFile;
 
-    Type currentType = Normal;
+private:
+    Type loadedType = Normal;
+    Drawable::Image::Ptr image;
 };
 
 //------------------------------------------------------------------------------
@@ -198,9 +209,7 @@ private:
     ScreenRect m_selectionRect;
     bool m_selecting = false;
 
-    sf::Texture m_uiOverlay;
-    sf::Texture m_buttonBackground;
-
+    Drawable::Image::Ptr m_uiOverlay;
 
     genie::SlpFilePtr m_waypointFlag;
 

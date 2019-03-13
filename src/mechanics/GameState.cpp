@@ -101,11 +101,11 @@ GameState::GameState(const std::shared_ptr<SfmlRenderTarget> &renderTarget) :
     m_cameraDeltaX(0),
     m_cameraDeltaY(0),
     m_lastUpdate(0),
-    m_woodLabel(75, 5),
-    m_foodLabel(153, 5),
-    m_goldLabel(230, 5),
-    m_stoneLabel(307, 5),
-    m_populationLabel(384, 5)
+    m_woodLabel(72, 7),
+    m_foodLabel(150, 7),
+    m_goldLabel(227, 7),
+    m_stoneLabel(305, 7),
+    m_populationLabel(382, 7)
 {
     m_unitManager = std::make_shared<UnitManager>();
     renderTarget_ = renderTarget;
@@ -148,8 +148,8 @@ bool GameState::init()
 
     std::shared_ptr<genie::SlpFile> overlayFile = AssetManager::Inst()->getUiOverlay(AssetManager::Ui1280x1024, AssetManager::Viking);
     if (overlayFile) {
-        m_uiOverlay.loadFromImage(Resource::convertFrameToImage(overlayFile->getFrame()));
-        DBG << "Loaded UI overlay with size" << Size(m_uiOverlay.getSize());
+        m_uiOverlay = renderTarget_->convertFrameToImage(overlayFile->getFrame());
+        DBG << "Loaded UI overlay with size" << m_uiOverlay->size;
     } else {
         AssetManager::UiResolution attemptedResolution = AssetManager::Ui1280x1024;
         AssetManager::UiCiv attemptedCiv = AssetManager::Briton;
@@ -161,7 +161,6 @@ bool GameState::init()
                 } else if (attemptedResolution == AssetManager::Ui1024x768) {
                     attemptedResolution = AssetManager::Ui800x600;
                 } else {
-                    m_uiOverlay = sf::Texture();
                     break;
                 }
 
@@ -172,17 +171,14 @@ bool GameState::init()
 
         if (overlayFile) {
             WARN << "Loaded fallback ui overlay res" << attemptedResolution << "for civ" << attemptedCiv;
-            m_uiOverlay.loadFromImage(Resource::convertFrameToImage(overlayFile->getFrame()));
+            m_uiOverlay = renderTarget_->convertFrameToImage(overlayFile->getFrame());
         } else {
             WARN << "Failed to load ui overlay";
         }
     }
 
     m_mouseCursor.cursorsFile = AssetManager::Inst()->getSlp(AssetManager::filenameID("mcursors.shp"));
-    if (m_mouseCursor.cursorsFile) {
-        m_mouseCursor.texture.loadFromImage(Resource::convertFrameToImage(m_mouseCursor.cursorsFile->getFrame(Cursor::Normal)));
-        m_mouseCursor.sprite.setTexture(m_mouseCursor.texture);
-    } else {
+    if (!m_mouseCursor.cursorsFile) {
         WARN << "Failed to get cursors";
     }
 
@@ -250,13 +246,13 @@ void GameState::draw()
     m_unitInfoPanel->draw();
     m_minimap->draw();
 
-    renderTarget_->draw(m_woodLabel.text);
-    renderTarget_->draw(m_foodLabel.text);
-    renderTarget_->draw(m_goldLabel.text);
-    renderTarget_->draw(m_stoneLabel.text);
-    renderTarget_->draw(m_populationLabel.text);
+    m_woodLabel.draw(renderTarget_);
+    m_foodLabel.draw(renderTarget_);
+    m_goldLabel.draw(renderTarget_);
+    m_stoneLabel.draw(renderTarget_);
+    m_populationLabel.draw(renderTarget_);
 
-    renderTarget_->renderTarget_->draw(m_mouseCursor.sprite);
+    m_mouseCursor.draw(renderTarget_);
 }
 
 bool GameState::update(Time time)
@@ -361,7 +357,7 @@ bool GameState::handleEvent(sf::Event event)
                     :
                 ScreenPos(event.mouseButton.x, event.mouseButton.y);
 
-    m_mouseCursor.sprite.setPosition(mousePos);
+    m_mouseCursor.position = mousePos;
     if (m_minimap->rect().contains(mousePos)) {
         if (m_minimap->handleEvent(event)) {
             return true;
@@ -396,15 +392,15 @@ bool GameState::handleEvent(sf::Event event)
             }
 
             if (m_unitManager->state() == UnitManager::State::SelectingAttackTarget) {
-                m_mouseCursor.setCursor(Cursor::Attack);
+                m_mouseCursor.currentType = Cursor::Attack;
             } else {
                 const Task targetAction = m_unitManager->defaultActionAt(mousePos, renderTarget_->camera());
                 if (!targetAction.data) {
-                    m_mouseCursor.setCursor(Cursor::Normal);
+                    m_mouseCursor.currentType = Cursor::Normal;
                 } else if (targetAction.data->ActionType == genie::Task::Combat) {
-                    m_mouseCursor.setCursor(Cursor::Attack);
+                    m_mouseCursor.currentType = Cursor::Attack;
                 } else {
-                    m_mouseCursor.setCursor(Cursor::Action);
+                    m_mouseCursor.currentType = Cursor::Action;
                 }
             }
 
@@ -452,12 +448,12 @@ bool GameState::handleEvent(sf::Event event)
 
 Size GameState::uiSize() const
 {
-    if (m_uiOverlay.getSize().x == 0 || m_uiOverlay.getSize().y == 0) {
+    if (!m_uiOverlay->size.isValid()) {
         WARN << "We don't have a valid UI overlay";
         return Size(640, 480);
     }
 
-    return m_uiOverlay.getSize();
+    return m_uiOverlay->size;
 }
 
 void GameState::setupScenario()

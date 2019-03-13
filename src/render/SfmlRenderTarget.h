@@ -23,6 +23,7 @@
 
 #include <resource/Graphic.h>
 #include <SFML/Graphics/Texture.hpp>
+#include <SFML/Graphics/Text.hpp>
 
 namespace sf {
 class RenderTarget;
@@ -34,6 +35,15 @@ struct SfmlImage : public Drawable::Image
     SfmlImage() {}
 
     sf::Texture texture;
+};
+
+struct SfmlText : public Drawable::Text
+{
+    SfmlText() {}
+
+    sf::Text text;
+    ScreenPos lastPos;
+    Alignment lastAlignment = AlignLeft;
 };
 
 class SfmlRenderTarget : public IRenderTarget
@@ -81,5 +91,8 @@ public:
 
     std::unique_ptr<sf::RenderTexture> m_renderTexture;
 
+
+    Drawable::Text::Ptr createText() override;
+    void draw(const Drawable::Text::Ptr &text) override;
 };
 
