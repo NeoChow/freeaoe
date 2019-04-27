@@ -10,3 +10,6 @@
 [submodule "extern/mini_al"]
 	path = extern/mini_al
 	url = https://github.com/dr-soft/mini_al.git
+[submodule "extern/PEGTL"]
+	path = extern/PEGTL
+	url = https://github.com/taocpp/PEGTL.git
