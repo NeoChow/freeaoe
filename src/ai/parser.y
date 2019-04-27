@@ -1,25 +1,60 @@
-%{
+%skeleton "lalr1.cc"
+%require  "3.0"
 
-#include <string>
+%defines
+%define api.namespace { ai }
+%define api.parser.class {ScriptParser}
+%define api.value.type variant
+%define api.token.constructor
+%define parse.assert true
+%define parse.error verbose
+%locations
 
-extern int yylex();
-extern int yyparse();
-extern FILE* yyin;
 
-void yyerror(const char* s);
-%}
+%param {ai::ScriptLoader &driver}
+%parse-param {ai::ScriptTokenizer &scanner}
 
-%union {
-	int number;
-	char *string;
+%code requires {
+
+    namespace ai {
+        class ScriptTokenizer;
+        class ScriptLoader;
+    }
+
+    #ifndef YYDEBUG
+        #define YYDEBUG 1
+    #endif
+
+    #define YY_NULLPTR nullptr
 }
 
-%destructor { delete $$; $$ = nullptr; } String SymbolName;
+
+%{
+
+    #include <cassert>
+    #include <iostream>
+
+    #include "ScriptLoader.h"
+    #include "ScriptTokenizer.h"
+
+    #include "parser.tab.hh"
+    #include "location.hh"
+
+    #undef yylex
+    #define yylex scanner.yylex
+%}
+
+// %union {
+// 	int number;
+// 	char *string;
+// }
+
+// %destructor { delete $$; $$ = nullptr; } String SymbolName;
 
 
-%token<number> Number
-%token<string> String
-%token<string> SymbolName
+%token<int> Number
+%token<std::string> String
+%token<std::string> SymbolName
 
 %token OpenParen CloseParen
 %token RuleStart ConditionActionSeparator
@@ -30,13 +65,15 @@ void yyerror(const char* s);
 
 %token Space NewLine
 
+%token ScriptEnd 0
+
 %start aiscript
 
 %%
 
 aiscript:
     /* Empty */
-    | rules { printf("got script\n"); }
+    | rules ScriptEnd { printf("got script\n"); }
 ;
 
 rules:
@@ -53,16 +90,16 @@ conditions:
 condition:
     OpenParen Not condition CloseParen { printf("got negated condition\n"); }
     | OpenParen Or conditions CloseParen { printf("got multiple or conditions\n"); }
-    | OpenParen SymbolName CloseParen { printf("got condition with symbol '%s'\n", $2); }
-    | OpenParen SymbolName Number CloseParen { printf("got condition with symbol '%s' and number %d\n", $2, $3); }
-    | OpenParen SymbolName Number Number CloseParen { printf("got condition with symbol '%s' and numbers %d %d\n", $2, $3, $4); }
-    | OpenParen SymbolName SymbolName CloseParen { printf("got condition with two symbols '%s' %s\n", $2, $3); }
-    | OpenParen SymbolName SymbolName SymbolName CloseParen { printf("got condition with three symbols %s %s %s\n", $2, $3, $4); }
-    | OpenParen SymbolName comparison Number CloseParen { printf("got condition with comparison %s %d\n", $2, $4); }
-    | OpenParen SymbolName comparison SymbolName CloseParen { printf("got condition with comparison %s %s\n", $2, $4); }
-    | OpenParen SymbolName SymbolName comparison SymbolName CloseParen { printf("got condition with comparison %s %s %s\n", $2, $3, $5); }
-    | OpenParen SymbolName SymbolName comparison Number CloseParen { printf("got condition with comparison %s %s %d\n", $2, $3, $5); }
-    | OpenParen SymbolName SymbolName SymbolName comparison Number CloseParen { printf("got condition with comparison %s %s %s %d\n", $2, $3, $4, $6); }
+    | OpenParen SymbolName CloseParen { printf("got condition with symbol '%s'\n", $2.c_str()); }
+    | OpenParen SymbolName Number CloseParen { printf("got condition with symbol '%s' and number %d\n", $2.c_str(), $3); }
+    | OpenParen SymbolName Number Number CloseParen { printf("got condition with symbol '%s' and numbers %d %d\n", $2.c_str(), $3, $4); }
+    | OpenParen SymbolName SymbolName CloseParen { printf("got condition with two symbols '%s' %s\n", $2.c_str(), $3.c_str()); }
+    | OpenParen SymbolName SymbolName SymbolName CloseParen { printf("got condition with three symbols %s %s %s\n", $2.c_str(), $3.c_str(), $4.c_str()); }
+    | OpenParen SymbolName comparison Number CloseParen { printf("got condition with comparison %s %d\n", $2.c_str(), $4); }
+    | OpenParen SymbolName comparison SymbolName CloseParen { printf("got condition with comparison %s %s\n", $2.c_str(), $4.c_str()); }
+    | OpenParen SymbolName SymbolName comparison SymbolName CloseParen { printf("got condition with comparison %s %s %s\n", $2.c_str(), $3.c_str(), $5.c_str()); }
+    | OpenParen SymbolName SymbolName comparison Number CloseParen { printf("got condition with comparison %s %s %d\n", $2.c_str(), $3.c_str(), $5); }
+    | OpenParen SymbolName SymbolName SymbolName comparison Number CloseParen { printf("got condition with comparison %s %s %s %d\n", $2.c_str(), $3.c_str(), $4.c_str(), $6); }
 
 
 comparison:
@@ -77,27 +114,21 @@ actions:
     | action  actions { printf("got multiple actions\n"); }
 
 action:
-    OpenParen SymbolName CloseParen { printf("got action %s without arguments\n", $2); }
-    | OpenParen SymbolName String CloseParen { printf("got action %s with string %s\n", $2, $3); }
-    | OpenParen SymbolName SymbolName Number CloseParen { printf("got action %s with symbol %s and number %d\n", $2, $3, $4); }
-    | OpenParen SymbolName SymbolName CloseParen { printf("got action %s with symbol %s\n", $2, $3); }
-    | OpenParen SymbolName Number CloseParen { printf("got action %s with number %d\n", $2, $3); }
-    | OpenParen SymbolName Number Number CloseParen { printf("got action %s with numbers %d %d\n", $2, $3, $4); }
+    OpenParen SymbolName CloseParen { printf("got action %s without arguments\n", $2.c_str()); }
+    | OpenParen SymbolName String CloseParen { printf("got action %s with string %s\n", $2.c_str(), $3.c_str()); }
+    | OpenParen SymbolName SymbolName Number CloseParen { printf("got action %s with symbol %s and number %d\n", $2.c_str(), $3.c_str(), $4); }
+    | OpenParen SymbolName SymbolName CloseParen { printf("got action %s with symbol %s\n", $2.c_str(), $3.c_str()); }
+    | OpenParen SymbolName Number CloseParen { printf("got action %s with number %d\n", $2.c_str(), $3); }
+    | OpenParen SymbolName Number Number CloseParen { printf("got action %s with numbers %d %d\n", $2.c_str(), $3, $4); }
 
 
 %%
 
 int main() {
-	yyin = stdin;
-
-	do {
-		yyparse();
-	} while(!feof(yyin));
-
-	return 0;
+       ai::ScriptLoader parser;
+       return parser.parse(std::cin, std::cout);
 }
 
-void yyerror(const char* s) {
-	fprintf(stderr, "Parse error: %s\n", s);
-	exit(1);
+void ai::ScriptParser::error(const location_type &loc, const std::string& message) {
+    std::cerr << "parser error: " << message << " at " << loc.begin.line << std::endl;
 }
