@@ -39,15 +39,14 @@ comparison:
     | RelOpEqual {  printf("got equals\n"); }
 
 actions:
-    action {  printf("got single action\n"); }
-    | action  actions {  printf("got multiple actions\n"); }
+    OpenParen action CloseParen {  printf("got single action\n"); }
+    | action actions {  printf("got multiple actions\n"); }
 
-action:
-    OpenParen SymbolName CloseParen { printf("got action %s without arguments\n", $2.c_str()); }
-    | OpenParen SymbolName String CloseParen {  printf("got action %s with string %s\n", $2.c_str(), $3.c_str()); }
-    | OpenParen FnSetStrategicNumber strategicnumber Number CloseParen {  printf("got action  with symbol and number %d\n",  $4); }
-    | OpenParen SymbolName SymbolName Number CloseParen {  printf("got action %s with symbol %s and number %d\n", $2.c_str(), $3.c_str(), $4); }
-    | OpenParen SymbolName SymbolName CloseParen {  printf("got action %s with symbol %s\n", $2.c_str(), $3.c_str()); }
-    | OpenParen SymbolName Number CloseParen {  printf("got action %s with number %d\n", $2.c_str(), $3); }
-    | OpenParen SymbolName Number Number CloseParen {  printf("got action %s with numbers %d %d\n", $2.c_str(), $3, $4); }
-
+//action:
+//    OpenParen SymbolName CloseParen { printf("got action %s without arguments\n", $2.c_str()); }
+//    | OpenParen SymbolName String CloseParen {  printf("got action %s with string %s\n", $2.c_str(), $3.c_str()); }
+//    | OpenParen SymbolName SymbolName Number CloseParen {  printf("got action %s with symbol %s and number %d\n", $2.c_str(), $3.c_str(), $4); }
+//    | OpenParen SymbolName SymbolName CloseParen {  printf("got action %s with symbol %s\n", $2.c_str(), $3.c_str()); }
+//    | OpenParen SymbolName Number CloseParen {  printf("got action %s with number %d\n", $2.c_str(), $3); }
+//    | OpenParen SymbolName Number Number CloseParen {  printf("got action %s with numbers %d %d\n", $2.c_str(), $3, $4); }
+//

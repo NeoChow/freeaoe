@@ -59,8 +59,6 @@
 %token OpenParen CloseParen
 %token RuleStart ConditionActionSeparator
 
-%token FnSetStrategicNumber
-
 %token LessThan LessOrEqual GreaterThan GreaterOrEqual Equal Not Or
 
 %token LoadIfDefined Else EndIf
