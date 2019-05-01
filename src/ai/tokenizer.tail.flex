@@ -1,36 +1,35 @@
 
-"set-strategic-number" { return FnSetStrategicNumber; }
-"("                 { return OpenParen; }
-")"                 { return CloseParen; }
-"defrule"           { return RuleStart; }
-"=>"                { return ConditionActionSeparator; }
+"("                 RET_TOKEN(OpenParen)
+")"                 RET_TOKEN(CloseParen)
+"defrule"           RET_TOKEN(RuleStart)
+"=>"                RET_TOKEN(ConditionActionSeparator)
 
-"not"                 { return Not; }
-"or"                 { return Or; }
+"not"               RET_TOKEN(Not)
+"or"                RET_TOKEN(Or)
 
-"<"                 { return RelOpLessThan; }
-"less-than"         { return RelOpLessThan; }
+"<"                 RET_TOKEN(LessThan)
+"less-than"         RET_TOKEN(LessThan)
 
-"<="                { return RelOpLessOrEqual; }
-"less-or-equal"     { return RelOpLessOrEqual; }
+"<="                RET_TOKEN(LessOrEqual)
+"less-or-equal"     RET_TOKEN(LessOrEqual)
 
-">"                 { return RelOpGreaterThan; }
-"greater-than"      { return RelOpGreaterThan; }
+">"                 RET_TOKEN(GreaterThan)
+"greater-than"      RET_TOKEN(GreaterThan)
 
-">="                { return RelOpGreaterOrEqual; }
-"greater-or-equal"  { return RelOpGreaterOrEqual; }
+">="                RET_TOKEN(GreaterOrEqual)
+"greater-or-equal"  RET_TOKEN(GreaterOrEqual)
 
-"=="                { return RelOpEqual; }
-"equal"             { return RelOpEqual; }
+"=="                RET_TOKEN(Equal)
+"equal"             RET_TOKEN(Equal)
 
-"#load-if-defined"  { return LoadIfDefined; }
-"#else"             { return Else; }
-"#end-if"           { return EndIf; }
+"#load-if-defined"  RET_TOKEN(LoadIfDefined)
+"#else"             RET_TOKEN(Else)
+"#end-if"           RET_TOKEN(EndIf)
 
 [\r\n]+
 
-{symbolname}        { yylval_param->string = strdup(yytext); return SymbolName; }
-{string}            { yylval_param->string = strdup(yytext); return String; }
-{number}            { yylval_param->number = atoi(yytext); return Number; }
+{symbolname}        RET_STRING(SymbolName)
+{string}            RET_STRING(String)
+{number}            RET_INT(Number)
 
 %%

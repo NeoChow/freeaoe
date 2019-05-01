@@ -1,7 +1,7 @@
 #include "ScriptLoader.h"
 
 #include "ScriptTokenizer.h"
-#include <parser.tab.hh>
+#include "grammar.gen.tab.hh"
 
 
 int ai::ScriptLoader::parse(std::istream& in, std::ostream& out) {

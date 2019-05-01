@@ -11,7 +11,7 @@
 #include <FlexLexer.h>
 #endif
 
-#include <parser.tab.hh>
+#include "grammar.gen.tab.hh"
 #include "location.hh"
 
 namespace ai {

@@ -1,53 +1,72 @@
+%skeleton "lalr1.cc"
+%require  "3.0"
+
+%defines
+%define api.namespace { ai }
+%define api.parser.class {ScriptParser}
+%define api.value.type variant
+%define api.token.constructor
+%define parse.assert true
 %define parse.error verbose
-%define api.pure full
 %locations
+
+
+%param {ai::ScriptLoader &driver}
+%parse-param {ai::ScriptTokenizer &scanner}
+
+%code requires {
+
+    namespace ai {
+        class ScriptTokenizer;
+        class ScriptLoader;
+    }
+
+    #ifndef YYDEBUG
+        #define YYDEBUG 1
+    #endif
+
+    #define YY_NULLPTR nullptr
+}
+
 
 %{
 
-#include <string>
-#include "common.h"
-#include "gen/enums.h"
+    #include <cassert>
+    #include <iostream>
 
+    #include "ScriptLoader.h"
+    #include "ScriptTokenizer.h"
 
-extern int yyparse();
-extern FILE* yyin;
-//extern YYLTYPE yylloc;
+    #include "grammar.gen.tab.hh"
+    #include "location.hh"
 
-
-//void yyerror(const char* s);
-void yyerror (YYLTYPE *locp, char const *msg);
-
-#define YYPARSE_PARAM aiRule
-
-union YYSTYPE;
-// extern int yylex(union YYSTYPE *);
-
-int yylex(YYSTYPE *lvalp, YYLTYPE *llocp);
-
+    #undef yylex
+    #define yylex scanner.yylex
 %}
 
+// %union {
+// 	int number;
+// 	char *string;
+// }
 
-%union {
-	int number;
-	char *string;
-    ParameterType type;
-}
+// %destructor { delete $$; $$ = nullptr; } String SymbolName;
 
-%destructor { delete $$; $$ = nullptr; } String SymbolName;
-
-%token<number> Number
-%token<string> String
-%token<string> SymbolName
+%token<int> Number
+%token<std::string> String
+%token<std::string> SymbolName
+%token<std::string> StrategicNumber
 
 %token OpenParen CloseParen
 %token RuleStart ConditionActionSeparator
 
 %token FnSetStrategicNumber
 
-%token Not Or
+%token LessThan LessOrEqual GreaterThan GreaterOrEqual Equal Not Or
 
 %token LoadIfDefined Else EndIf
 
 %token Space NewLine
+
+%token ScriptEnd 0
 
 %start aiscript

@@ -1,40 +1,38 @@
 %option case-insensitive
 %option noyywrap
-%option nointeractive
-%option nostdinit
-%option nodefault
 %option yylineno
-%option bison-bridge
-
+%option c++
+%option yyclass="ai::ScriptTokenizer"
 %{
-#include <stdio.h>
-#include "common.h"
-#include "grammar.gen.tab.h"
+    #include "ScriptLoader.h"
+    #include "ScriptTokenizer.h"
+    #include "grammar.gen.tab.hh"
+    #include "location.hh"
 
-/*[ \t\f]+            { return Space; }*/
+    static ai::location loc;
 
-#define YY_DECL  int yylex(union YYSTYPE *yylval_param, YYLTYPE *llocp)
+    #define YY_USER_ACTION loc.step(); loc.columns(yyleng);
 
+    #undef  YY_DECL
+    #define YY_DECL ai::ScriptParser::symbol_type ai::ScriptTokenizer::yylex(ai::ScriptLoader &driver)
 
+    #define yyterminate() return ai::ScriptParser::make_ScriptEnd(loc);
 
-//size_t offset;
-//YYLTYPE yylloc;
-//
-#define YY_USER_ACTION         \
-  llocp->offset += yyleng;            \
-  llocp->last_line = yylineno; \
-  llocp->last_column = llocp->offset;
+    #define RET_TOKEN(token_name) return ai::ScriptParser::symbol_type(ai::ScriptParser::token::token_name, loc);
+    #define RET_STRING(token_name) return ai::ScriptParser::symbol_type(ai::ScriptParser::token::token_name, yytext, loc);
+    #define RET_INT(token_name) return ai::ScriptParser::symbol_type(ai::ScriptParser::token::token_name, atoi(yytext), loc); 
 
 %}
 
-symbolname      [a-zA-Z]+[a-zA-Z-]*
-string          \"[^"\r\n]*\"
-number          [0-9]+
-comment         ;.*
-blank           [ \t]+
+
+
+symbolname  [a-zA-Z]+[a-zA-Z-]*
+string      \"[^"\r\n]*\"
+number      [0-9]+
+comment     ;.*
+blank   [ \t]+
 
 %%
 
 {comment}
 {blank}
-

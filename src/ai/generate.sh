@@ -37,7 +37,7 @@ while read -r -a LINE; do
 
         #echo "${TYPE}: ${NAME}= \"${TOKEN}\""
         #echo "\"${TOKEN}\"    { return yyTok; }" >> gen/tokens.flex
-         echo "\"${TOKEN}\"    { return ${TOKENNAME}; }" >> gen/tokens.flex
+        echo "\"${TOKEN}\"    { RET_TOKEN(${TOKENNAME}) }" >> gen/tokens.flex
 
         TOKENLIST+=" ${TOKENNAME}"
         if [[ "${i}" -lt 1 ]]; then
